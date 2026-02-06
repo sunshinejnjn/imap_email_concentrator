@@ -1,0 +1,8 @@
+imap_server: imap.163.com
+imap_tls_port: 993
+username: [IMAP ACCOUNT/eg: yourname@163.com]
+password: [IMAP/POP3授权码/PASSWORD]
+concerntrated_email_sender: Me <[EMAIL_ADDRESS]>
+concerntrated_email_receipt: Me <[EMAIL_ADDRESS]>
+7z_path: C:\Program Files\7-Zip\7z.exe
+ollama_url: http://localhost:11434

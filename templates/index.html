@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Archive</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        .sidebar {
+            width: 280px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #1a252f;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar-header {
+            padding: 20px;
+            background: #1a252f;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar-header a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .sidebar-scroll {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .section-title {
+            font-size: 0.85em;
+            text-transform: uppercase;
+            color: #95a5a6;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+        }
+
+        .tree-item {
+            margin-bottom: 5px;
+        }
+
+        .tree-year {
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px 10px;
+            display: block;
+            color: #bdc3c7;
+        }
+
+        .tree-year:hover {
+            color: #fff;
+        }
+
+        .tree-months {
+            margin-left: 15px;
+            display: none;
+        }
+
+        .tree-item.expanded .tree-months {
+            display: block;
+        }
+
+        .tree-year {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .tree-year::after {
+            content: '▸';
+            font-size: 0.8em;
+        }
+
+        .tree-item.expanded .tree-year::after {
+            content: '▾';
+        }
+
+        /* Section Toggling */
+        .section-title {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .section-title::after {
+            content: '▾';
+        }
+
+        .section-title.collapsed::after {
+            content: '▸';
+        }
+
+        .section-content {
+            display: block;
+        }
+
+        .section-content.collapsed {
+            display: none;
+        }
+
+        .tree-month {
+            display: block;
+            padding: 3px 10px;
+            color: #95a5a6;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .tree-month:hover {
+            color: #ecf0f1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .sender-link {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            color: #bdc3c7;
+            text-decoration: none;
+            font-size: 0.9em;
+            border-radius: 4px;
+        }
+
+        .sender-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sender-count {
+            background: #34495e;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+
+        /* Main Area */
+        .top-bar {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-field input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn-reset {
+            background: #95a5a6;
+        }
+
+        .btn-reset:hover {
+            background: #7f8c8d;
+        }
+
+        .results-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #7f8c8d;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+
+        tr:hover {
+            background: #fcfcfc;
+        }
+
+        .sender-name {
+            font-weight: 600;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .sender-name:hover {
+            text-decoration: underline;
+            color: #3498db;
+        }
+
+        .sender-email {
+            display: block;
+            font-size: 0.8em;
+            color: #95a5a6;
+            font-weight: normal;
+        }
+
+        .subject-cell {
+            color: #34495e;
+        }
+
+        .date-cell {
+            white-space: nowrap;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .id-cell {
+            color: #bdc3c7;
+            font-size: 0.8em;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #bdc3c7;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #95a5a6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="/">Email Archive</a>
+        </div>
+        <div class="sidebar-scroll">
+
+            <div class="section-title" onclick="toggleSection(this)">Timeline</div>
+            <div class="section-content">
+                {% for year, months in date_tree.items() %}
+                <div class="tree-item">
+                    <span class="tree-year" onclick="toggleTreeItem(this.parentElement)">{{ year }}</span>
+                    <div class="tree-months">
+                        {% for m in months %}
+                        <a href="/?start_date={{ year }}-{{ m.month }}-01&end_date={{ year }}-{{ m.month }}-31"
+                            class="tree-month">
+                            {{ year }}-{{ m.month }} ({{ m.count }})
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="section-title">Top Senders</div>
+            {% for sender in top_senders %}
+            <a href="/?sender_email={{ sender.email }}" class="sender-link" title="{{ sender.email }}">
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">{{
+                    sender.name }}</span>
+                <span class="sender-count">{{ sender.count }}</span>
+            </a>
+            {% endfor %}
+
+        </div>
+    </div>
+
+    <div class="main-content">
+        <form action="/" method="get" class="top-bar">
+            <!-- Persist Filters if needed, or clear? Usually helpful to keep context but tricky with raw links. -->
+            <!-- For now simpler: Search bar is independent or additive. -->
+
+            <input type="text" name="q" placeholder="Keywords (Subject, Name...)" value="{{ query }}" size="30">
+            <input type="date" name="start_date" value="{{ start_date }}" title="Start Date">
+            <input type="date" name="end_date" value="{{ end_date }}" title="End Date">
+
+            <!-- Hidden sender filter if we want to search WITHIN a sender? No, usually search clears it unless we handle logic. -->
+            {% if sender_filter %}
+            <div
+                style="background: #e1f5fe; color: #0277bd; padding: 5px 10px; border-radius: 4px; font-size: 0.9em; display: flex; align-items: center; gap: 5px;">
+                <span>Filter: {{ sender_filter }}</span>
+                <input type="hidden" name="sender_email" value="{{ sender_filter }}">
+                <a href="/" style="color: #0277bd; text-decoration: none; font-weight: bold;">✕</a>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn">Search</button>
+            <a href="/" class="btn btn-reset">Reset</a>
+        </form>
+
+        <div class="results-area">
+            {% if emails %}
+            <table>
+                <thead>
+                    <tr>
+                        <th width="150">Date</th>
+                        <th width="250">Sender</th>
+                        <th>Subject</th>
+                        <th width="60">ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for email in emails %}
+                    <tr>
+                        <td class="date-cell">{{ email['date'][:16] }}</td>
+                        <td>
+                            <a href="/?sender_email={{ email['sender_email'] }}" class="sender-name">
+                                {{ email['sender_name'] }}
+                            </a>
+                            {% if email['sender_name'] != email['sender_email'] %}
+                            <span class="sender-email">{{ email['sender_email'] }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="subject-cell">{{ email['subject'] }}</td>
+                        <td class="id-cell">{{ email['id'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="text-align: center; color: #777; margin-top: 50px;">
+                {% if query or start_date or end_date or sender_filter %}
+                No emails found matching your filters.
+                {% else %}
+                Select a month or sender from the sidebar, or search above.
+                {% endif %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function toggleTreeItem(element) {
+            element.classList.toggle('expanded');
+        }
+
+        function toggleSection(headerElement) {
+            headerElement.classList.toggle('collapsed');
+            var content = headerElement.nextElementSibling;
+            if (content) {
+                content.classList.toggle('collapsed');
+            }
+        }
+    </script>
+</body>
+
+</html>
